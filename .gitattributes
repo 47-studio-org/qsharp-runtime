@@ -49,7 +49,7 @@
 # is only available from the command line. Turn it on by uncommenting the 
 # entries below.
 ###############################################################################
-*.md   diff=astextplain
+#*.md   diff=astextplain
 #*.doc   diff=astextplain
 #*.DOC   diff=astextplain
 #*.docx  diff=astextplain
@@ -60,3 +60,9 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Prevent GitHub from excluding the build/ directory from the file finder.
+# See: https://docs.github.com/en/search-github/searching-on-github/finding-files-on-github
+###############################################################################
+build/** linguist-generated=false

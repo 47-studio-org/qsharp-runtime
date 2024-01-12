@@ -11,6 +11,10 @@
 #pragma clang diagnostic push
     // Temporarily disable `-Wswitch-enum`, one of the `switch`es in "CLI11.hpp" handles not all the enumerators.
     #pragma clang diagnostic ignored "-Wswitch-enum"
+#if (__clang_major__ > 14)
+    // Temporarily disable `-Wunsafe-buffer-usage`, since "CLI11.hpp" uses argv to get cmdline arguments.
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+#endif
     #include "CLI11.hpp"
 #pragma clang diagnostic pop
 // clang-format on
@@ -73,9 +77,9 @@ static map<string, char> ResultAsCharMap{{"0", InteropResultZeroAsChar},
                                          {"One", InteropResultOneAsChar}};
 
 template<typename T>
-unique_ptr<InteropArray> CreateInteropArray(vector<T>& v)
+unique_ptr<InteropArray> CreateInteropArray(vector<T>& vec)
 {
-    unique_ptr<InteropArray> array(new InteropArray(v.size(), v.data()));
+    unique_ptr<InteropArray> array(new InteropArray(vec.size(), vec.data()));
     return array;
 }
 
@@ -86,11 +90,11 @@ static unique_ptr<InteropRange> CreateInteropRange(RangeTuple rangeTuple)
 }
 
 template<typename T>
-void FreePointerVector(vector<T*>& v)
+void FreePointerVector(vector<T*>& vec)
 {
-    for (auto p : v)
+    for (auto ptr : vec)
     {
-        delete p;
+        delete ptr;
     }
 }
 
@@ -107,9 +111,9 @@ static InteropRange* TranslateRangeTupleToInteropRangePointer(RangeTuple& rangeT
     return range;
 }
 
-static const char* TranslateStringToCharBuffer(string& s)
+static const char* TranslateStringToCharBuffer(string& strParam)
 {
-    return s.c_str();
+    return strParam.c_str();
 }
 
 int main(int argc, char* argv[])

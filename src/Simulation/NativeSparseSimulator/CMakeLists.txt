@@ -30,6 +30,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(Microsoft.Quantum.SparseSimulator.Runtime PUBLIC -O3 -ftree-vectorize -mavx2 -mfma)
 endif()
 
+if (MSVC)
+    add_compile_options(/bigobj)
+endif()
+
 message("Compiler flags: ${CMAKE_CXX_FLAGS_RELEASE}")
 
 
@@ -41,3 +45,9 @@ foreach(TEST SparseSimulatorTests CSharpIntegrationTests)
     target_include_directories(${TEST} PRIVATE ../../Qir/Common/Externals/catch2)
     add_test(${TEST} ${TEST})
 endforeach()
+
+install(TARGETS Microsoft.Quantum.SparseSimulator.Runtime
+        RUNTIME DESTINATION "${CMAKE_BINARY_DIR}/drop"
+        LIBRARY DESTINATION "${CMAKE_BINARY_DIR}/drop"
+        ARCHIVE DESTINATION "${CMAKE_BINARY_DIR}/drop"
+       )

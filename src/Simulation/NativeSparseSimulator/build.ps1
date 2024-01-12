@@ -26,7 +26,7 @@ if (-not (Test-Path $BuildDir)) {
 # pushd build
 Push-Location $BuildDir
 
-    $CmakeConfigCommand = "cmake -G Ninja -D CMAKE_VERBOSE_MAKEFILE:BOOL=ON -D CMAKE_BUILD_TYPE=$buildType -S .. "  # Without `-G Ninja` the compiler chosen is always `cl.exe`.
+    $CmakeConfigArgs = @("-G", "Ninja", "-D", "CMAKE_VERBOSE_MAKEFILE:BOOL=ON", "-D", "CMAKE_BUILD_TYPE=$buildType", "-S", "..")  # Without `-G Ninja` the compiler chosen is always `cl.exe`.
     
     if (($IsMacOS) -or ((Test-Path Env:/AGENT_OS) -and ($Env:AGENT_OS.StartsWith("Darwin")))) {
         Write-Host "On MacOS build using the default C/C++ compiler (should be AppleClang)"
@@ -34,9 +34,9 @@ Push-Location $BuildDir
     else {
         if (($IsLinux) -or ((Test-Path Env:AGENT_OS) -and ($Env:AGENT_OS.StartsWith("Lin")))) {
             Write-Host "On Linux build using Clang"
-            $CC = "clang-14"
-            $CXX = "clang++-14"
-            #$clangTidy = "-DCMAKE_CXX_CLANG_TIDY=clang-tidy-11"
+            $CC = "clang-16"
+            $CXX = "clang++-16"
+            #$clangTidy = "-DCMAKE_CXX_CLANG_TIDY=clang-tidy-16"
         }
         elseif (($IsWindows) -or ((Test-Path Env:AGENT_OS) -and ($Env:AGENT_OS.StartsWith("Win")))) {
             Write-Host "On Windows build using Clang"
@@ -60,14 +60,14 @@ Push-Location $BuildDir
             $FailureCommands.Invoke()
         }
 
-        $CmakeConfigCommand += " -D CMAKE_C_COMPILER=$CC -D CMAKE_CXX_COMPILER=$CXX "
+        $CmakeConfigArgs += @("-D", "CMAKE_C_COMPILER=$CC", "-D", "CMAKE_CXX_COMPILER=$CXX")
     }
 
     # Generate the build scripts:
-    ( Invoke-Expression $CmakeConfigCommand ) || ( $FailureCommands.Invoke() )
+    ( & "cmake" $CmakeConfigArgs ) || ( $FailureCommands.Invoke() )
 
     # Invoke the build scripts:
-    ( cmake --build . ) || ( $FailureCommands.Invoke() )
+    ( cmake --build . --target install) || ( $FailureCommands.Invoke() )
 
 # popd
 Pop-Location

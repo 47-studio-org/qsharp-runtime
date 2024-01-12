@@ -7,47 +7,53 @@ Write-Host "##[info] Runtime/prerequisites.ps1"
 
 if ($Env:ENABLE_QIRRUNTIME -ne "false") {
     if (($IsWindows) -or ((Test-Path Env:/AGENT_OS) -and ($Env:AGENT_OS.StartsWith("Win")))) {
+        $ChocoRan = $false
         if (!(Get-Command clang        -ErrorAction SilentlyContinue) -or `
             !(Get-Command clang-format -ErrorAction SilentlyContinue) -or `
             (Test-Path Env:/AGENT_OS)) {
-            choco install llvm --version=14.0.6 --allow-downgrade
+            choco install llvm --version=16.0.6 --allow-downgrade
+            $ChocoRan = $true
             Write-Host "##vso[task.setvariable variable=PATH;]$($env:SystemDrive)\Program Files\LLVM\bin;$Env:PATH"
         }
         if (!(Get-Command ninja -ErrorAction SilentlyContinue)) {
             choco install ninja
+            $ChocoRan = $true
         }
         if (!(Get-Command cmake -ErrorAction SilentlyContinue)) {
             choco install cmake
+            $ChocoRan = $true
         }
-        refreshenv
+        if ($ChocoRan) {
+            refreshenv
+        }
     } elseif ($IsMacOS) {
         # temporary workaround for Bintray sunset
         # remove this after Homebrew is updated to 3.1.1 on MacOS image, see:
         # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md
         brew update
         brew install ninja
-        brew install llvm@14
+        brew install llvm@16
         if (!(Get-Command clang-format -ErrorAction SilentlyContinue)) {
-            brew install clang-format@14    # Still needed after the LLVM is installed.
+            brew install clang-format@16    # Still needed after the LLVM is installed.
         }
     } else {
-        $needClang = !(Get-Command clang-14 -ErrorAction SilentlyContinue)
+        $needClang = !(Get-Command clang-16 -ErrorAction SilentlyContinue)
         if (Get-Command sudo -ErrorAction SilentlyContinue) {
             if ($needClang) { 
                 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
-                sudo add-apt-repository "deb https://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+                sudo add-apt-repository "deb https://apt.llvm.org/focal/ llvm-toolchain-focal-16 main"
             }
             sudo apt update
             sudo apt-get install -y ninja-build
-            sudo apt-get install -y clang-14 clang-tidy-14 clang-format-14
+            sudo apt-get install -y clang-16 clang-tidy-16 clang-format-16
         } else {
             if ($needClang) {
                 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|apt-key add -
-                add-apt-repository "deb https://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+                add-apt-repository "deb https://apt.llvm.org/focal/ llvm-toolchain-focal-16 main"
             }
             apt update
             apt-get install -y ninja-build
-            apt-get install -y clang-14 clang-tidy-14 clang-format-14
+            apt-get install -y clang-16 clang-tidy-16 clang-format-16
         }
     }
 
@@ -72,7 +78,9 @@ if ($Env:ENABLE_QIRRUNTIME -ne "false") {
     # rustfmt and clippy is available.
     rustup install nightly
     rustup toolchain install nightly
+    rustup toolchain install nightly-2022-08-01
     rustup component add rustfmt clippy llvm-tools-preview
     rustup component add rustfmt clippy llvm-tools-preview --toolchain nightly
+    rustup component add rustfmt clippy llvm-tools-preview --toolchain nightly-2022-08-01
     }
 
